@@ -41,10 +41,9 @@ export default function App() {
     }
   }
 
-  async function initTrackLocation() {
-    let count = 1;
-    console.log("Inizio Tracking...");
-
+  const initTrackLocation = async () => {
+    console.log("Inizio tracking ...");
+    let count = 0;
     const subscription = await Location.watchPositionAsync( //restituisce un metodo remove 
       { //options
         timeInterval: 4000, //only Android
@@ -52,8 +51,9 @@ export default function App() {
         distanceInterval: 0, //Distanza minima tra ogni aggiornamento
       }, 
       (location) => { //callback
-        setTrackedLocation(location.coords);
-        console.log({ ...location.coords, increment: count++});
+        count++
+        setTrackedLocation({ ...location.coords, increment: count});
+        console.log({ ...location.coords, increment: count});
       }
     );
 
@@ -61,8 +61,11 @@ export default function App() {
   }
 
   useEffect(() => { 
-    locationPermissionAsync().then(() => console.log("---FINE---"));
-    initTrackLocation(); //avviata insieme a locationPermissionAsync, al primo avvio non funziona
+    locationPermissionAsync().then(() => {
+      console.log("---FINE---");
+      initTrackLocation();
+    } );
+    //initTrackLocation(); //chiamato insieme a locationPermissionAsync, al primo avvio non funziona
     
     return () => { //Allo smontare della componente viene terminata l'iscrizione
       if (trackingSubsription.current !== null)
@@ -71,38 +74,27 @@ export default function App() {
     
   }, []);
 
-  /*if (currentLocation === null || trackedLocation === null ) { 
+  if (loading) { //currentLocation === null || trackedLocation === null
     return (
       <View style={styles.container}>
         <Text>Caricamento...</Text>
         <ActivityIndicator size={"large"} />
       </View>
     );
-  }*/
+  }
 
   return (
     <View style={styles.container}>
-      {currentLocation === null ? (
-        <Text>Loading current Location ...</Text>
-      ) : (
-        <View>
-          <Text style={styles.bigText}>Posizione corrente</Text>
-          <Text>lat: {currentLocation ? currentLocation.lat : "Loading..."}</Text>
-          <Text>lng: {currentLocation ? currentLocation.lng : "Loading..."}</Text>
+      <Text style={styles.bigText}>Posizione corrente</Text>
+      <Text>lat: {currentLocation ? currentLocation.lat : "Loading..."}</Text>
+      <Text>lng: {currentLocation ? currentLocation.lng : "Loading..."}</Text>
 
-          <Button title="Click me" onPress={() => console.log('hello')} color="red"/>
-        </View>
-      )}
-      <View style={{ marginVertical: 20 }}/>
-      {trackedLocation === null ? (
-        <Text>Loading tracked location...</Text>
-      ) : (
-        <View>
-          <Text style={styles.bigText}>Posizione tracking </Text>
-          <Text>lat: {trackedLocation.latitude}</Text>
-          <Text>lng: {trackedLocation.longitude}</Text>
-        </View>
-      )}
+      <Button title="Click me" onPress={() => console.log('hello')} color="red"/>
+
+      <Text style={styles.bigText}>Posizione tracking {trackedLocation ? trackedLocation.increment : "..."}</Text>
+      <Text>lat: {trackedLocation ? trackedLocation.latitude : "Loading..."}</Text>
+      <Text>lng: {trackedLocation ? trackedLocation.longitude : "Loading..."}</Text>
+      
       <StatusBar style="auto" />
     </View>
   );
